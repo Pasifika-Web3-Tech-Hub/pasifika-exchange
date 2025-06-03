@@ -10,7 +10,7 @@ contract DeployPasifikaExchange is Script {
     function run() public returns (PasifikaExchange) {
         // Deploy price feed or use existing one
         PasifikaPriceFeed priceFeed;
-        
+
         // Check if we should deploy a new price feed or use an existing one
         if (vm.envOr("DEPLOY_PRICE_FEED", true)) {
             // Deploy a new price feed
@@ -28,16 +28,16 @@ contract DeployPasifikaExchange is Script {
                 priceFeed = deployPriceFeed.run();
             }
         }
-        
+
         vm.startBroadcast();
-        
+
         // Deploy the exchange contract
         PasifikaExchange exchange = new PasifikaExchange(address(priceFeed));
-        
+
         vm.stopBroadcast();
-        
+
         console.log("PasifikaExchange deployed at: %s", address(exchange));
-        
+
         return exchange;
     }
 }

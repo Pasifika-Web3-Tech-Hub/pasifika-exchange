@@ -13,13 +13,13 @@ interface IPasifikaPriceFeed {
      * @return The latest price with 8 decimals
      */
     function getLatestPrice(address tokenAddress) external view returns (int256);
-    
+
     /**
      * @dev Gets the latest ETH price in USD
      * @return The latest ETH price with 8 decimals
      */
     function getLatestETHPrice() external view returns (int256);
-    
+
     /**
      * @dev Converts an amount of tokens to its USD value
      * @param tokenAddress Address of the token
@@ -27,7 +27,7 @@ interface IPasifikaPriceFeed {
      * @return The USD value with 8 decimals
      */
     function convertTokenToUSD(address tokenAddress, uint256 amount) external view returns (uint256);
-    
+
     /**
      * @dev Converts an amount in USD to its token equivalent
      * @param tokenAddress Address of the token

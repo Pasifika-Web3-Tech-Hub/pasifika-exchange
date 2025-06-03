@@ -13,10 +13,10 @@ import "../interfaces/IPasifikaPriceFeed.sol";
 contract PasifikaPriceFeed is IPasifikaPriceFeed, Ownable {
     // Mapping from token address to price feed address
     mapping(address => address) private priceFeedAddresses;
-    
+
     // ETH/USD price feed address
     address public ethUsdPriceFeed;
-    
+
     /**
      * @dev Constructor sets the owner and ETH/USD price feed
      * @param _ethUsdPriceFeed Address of the ETH/USD Chainlink price feed
@@ -24,7 +24,7 @@ contract PasifikaPriceFeed is IPasifikaPriceFeed, Ownable {
     constructor(address _ethUsdPriceFeed) Ownable(msg.sender) {
         ethUsdPriceFeed = _ethUsdPriceFeed;
     }
-    
+
     /**
      * @dev Sets the price feed for a token
      * @param tokenAddress Address of the token
@@ -33,7 +33,7 @@ contract PasifikaPriceFeed is IPasifikaPriceFeed, Ownable {
     function setPriceFeed(address tokenAddress, address priceFeedAddress) external onlyOwner {
         priceFeedAddresses[tokenAddress] = priceFeedAddress;
     }
-    
+
     /**
      * @dev Updates the ETH/USD price feed
      * @param _ethUsdPriceFeed New address for the ETH/USD price feed
@@ -41,7 +41,7 @@ contract PasifikaPriceFeed is IPasifikaPriceFeed, Ownable {
     function updateEthUsdPriceFeed(address _ethUsdPriceFeed) external onlyOwner {
         ethUsdPriceFeed = _ethUsdPriceFeed;
     }
-    
+
     /**
      * @dev Gets the latest price for a token in USD from Chainlink
      * @param tokenAddress Address of the token
@@ -50,26 +50,26 @@ contract PasifikaPriceFeed is IPasifikaPriceFeed, Ownable {
     function getLatestPrice(address tokenAddress) external view override returns (int256) {
         address priceFeedAddress = priceFeedAddresses[tokenAddress];
         require(priceFeedAddress != address(0), "Price feed not found");
-        
+
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
-        (, int256 price, , , ) = priceFeed.latestRoundData();
-        
+        (, int256 price,,,) = priceFeed.latestRoundData();
+
         return price;
     }
-    
+
     /**
      * @dev Gets the latest ETH price in USD from Chainlink
      * @return The latest ETH price with 8 decimals
      */
     function getLatestETHPrice() public view override returns (int256) {
         require(ethUsdPriceFeed != address(0), "ETH price feed not set");
-        
+
         AggregatorV3Interface priceFeed = AggregatorV3Interface(ethUsdPriceFeed);
-        (, int256 price, , , ) = priceFeed.latestRoundData();
-        
+        (, int256 price,,,) = priceFeed.latestRoundData();
+
         return price;
     }
-    
+
     /**
      * @dev Converts an amount of tokens to its USD value
      * @param tokenAddress Address of the token
@@ -79,15 +79,15 @@ contract PasifikaPriceFeed is IPasifikaPriceFeed, Ownable {
     function convertTokenToUSD(address tokenAddress, uint256 amount) external view override returns (uint256) {
         address priceFeedAddress = priceFeedAddresses[tokenAddress];
         require(priceFeedAddress != address(0), "Price feed not found");
-        
+
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
-        (, int256 price, , , ) = priceFeed.latestRoundData();
+        (, int256 price,,,) = priceFeed.latestRoundData();
         uint8 decimals = priceFeed.decimals();
-        
+
         // Adjust for token decimals - assuming 18 decimals for the token
-        return (amount * uint256(price)) / 10**decimals;
+        return (amount * uint256(price)) / 10 ** decimals;
     }
-    
+
     /**
      * @dev Converts an amount in USD to its token equivalent
      * @param tokenAddress Address of the token
@@ -97,16 +97,16 @@ contract PasifikaPriceFeed is IPasifikaPriceFeed, Ownable {
     function convertUSDToToken(address tokenAddress, uint256 usdAmount) external view override returns (uint256) {
         address priceFeedAddress = priceFeedAddresses[tokenAddress];
         require(priceFeedAddress != address(0), "Price feed not found");
-        
+
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
-        (, int256 price, , , ) = priceFeed.latestRoundData();
+        (, int256 price,,,) = priceFeed.latestRoundData();
         require(price > 0, "Invalid price");
         uint8 decimals = priceFeed.decimals();
-        
+
         // Adjust for token decimals - assuming 18 decimals for the token
-        return (usdAmount * 10**decimals) / uint256(price);
+        return (usdAmount * 10 ** decimals) / uint256(price);
     }
-    
+
     /**
      * @dev Gets the decimals for a price feed
      * @param tokenAddress Address of the token
@@ -115,7 +115,7 @@ contract PasifikaPriceFeed is IPasifikaPriceFeed, Ownable {
     function getPriceFeedDecimals(address tokenAddress) external view returns (uint8) {
         address priceFeedAddress = priceFeedAddresses[tokenAddress];
         require(priceFeedAddress != address(0), "Price feed not found");
-        
+
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
         return priceFeed.decimals();
     }
