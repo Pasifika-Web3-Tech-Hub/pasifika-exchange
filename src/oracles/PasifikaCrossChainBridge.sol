@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IRouterClient.sol";
-import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
+import {IRouterClient} from "@chainlink/contracts/src/v0.8/ccip/interfaces/IRouterClient.sol";
+import {Client} from "@chainlink/contracts/src/v0.8/ccip/libraries/Client.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -105,11 +105,15 @@ contract PasifikaCrossChainBridge is Ownable {
      * @return The router client
      */
     function getRouter(SupportedChains chain) internal view returns (IRouterClient) {
-        return IRouterClient(ccipRouters[chain]);
+        address routerAddress = ccipRouters[chain];
+        if (routerAddress == address(0)) {
+            revert DestinationChainNotSupported(chainSelectors[chain]);
+        }
+        return IRouterClient(routerAddress);
     }
 
     /**
-     * @dev Sends a cross-chain message
+     * @dev Sends a message cross-chain
      * @param destinationChain The destination chain
      * @param receiver The receiver address on the destination chain
      * @param message The message to send
@@ -134,7 +138,7 @@ contract PasifikaCrossChainBridge is Ownable {
             receiver: abi.encode(receiver),
             data: message,
             tokenAmounts: new Client.EVMTokenAmount[](0),
-            extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({gasLimit: 200_000, strict: false})),
+            extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({gasLimit: 200_000})),
             feeToken: linkToken
         });
 
@@ -195,7 +199,7 @@ contract PasifikaCrossChainBridge is Ownable {
             receiver: abi.encode(receiver),
             data: "", // No message data
             tokenAmounts: tokenAmounts,
-            extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({gasLimit: 200_000, strict: false})),
+            extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({gasLimit: 200_000})),
             feeToken: linkToken
         });
 
@@ -229,9 +233,9 @@ contract PasifikaCrossChainBridge is Ownable {
         address sender = abi.decode(message.sender, (address));
 
         // Handle received tokens if any
-        if (message.tokenAmounts.length > 0) {
-            for (uint256 i = 0; i < message.tokenAmounts.length; i++) {
-                Client.EVMTokenAmount memory tokenAmount = message.tokenAmounts[i];
+        if (message.destTokenAmounts.length > 0) {
+            for (uint256 i = 0; i < message.destTokenAmounts.length; i++) {
+                Client.EVMTokenAmount memory tokenAmount = message.destTokenAmounts[i];
                 emit TokenReceived(messageId, sourceChainSelector, sender, tokenAmount.token, tokenAmount.amount);
             }
         }
