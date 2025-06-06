@@ -1,4 +1,12 @@
-# Pasifika Exchange
+# Pasifika Web3 Tech Hub - Exchange
+
+<div align="center">
+  <img src="./pasifika.png" alt="Pasifika" width="300" height="300" />
+  <h2>Building the Future of Pacific Island Web3 Technology</h2>
+  <p><em>Established 2025</em></p>
+  <hr />
+  <p><strong>"If we take care of our own, they will take care of us"</strong></p>
+</div>
 
 **Pasifika Exchange is a cross-chain decentralized exchange platform designed specifically for Pacific Island communities with initial deployment on Arbitrum.**
 
