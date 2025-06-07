@@ -51,11 +51,6 @@ jobs:
           forge --version
           forge config --list
           forge remappings
-          
-      - name: Check code formatting
-        run: |
-          # Run format check but don't fail on error
-          forge fmt --check || echo "Format check failed, proceeding with build"
 
       - name: Build contracts
         run: forge build --sizes
