@@ -1,0 +1,106 @@
+No files changed, compilation skipped
+Script ran successfully.
+
+== Return ==
+0: contract PasifikaPriceFeed 0x96F1C4fE633bD7fE6DeB30411979bE3d0e2246b4
+
+== Logs ==
+  Using ETH/USD feed at: 0x694AA1769357215DE4FAC081bf1f309aDC325306
+  PasifikaPriceFeed deployed at: 0x96F1C4fE633bD7fE6DeB30411979bE3d0e2246b4
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 421614
+
+Estimated gas price: 0.200000001 gwei
+
+Estimated total gas used for script: 895644
+
+Estimated amount required: 0.000179128800895644 ETH
+
+==========================
+
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+##
+Start verification for (1) contracts
+Start verifying contract `0x96F1C4fE633bD7fE6DeB30411979bE3d0e2246b4` deployed on arbitrum-sepolia
+Compiler version: 0.8.20
+Optimizations:    200
+Constructor args: 000000000000000000000000694aa1769357215de4fac081bf1f309adc325306
+
+Submitting verification for [src/oracles/PasifikaPriceFeed.sol:PasifikaPriceFeed] 0x96F1C4fE633bD7fE6DeB30411979bE3d0e2246b4.
+Submitted contract for verification:
+	Response: `OK`
+	GUID: `rvykhg5qsnhx8htelykuwalw1u2daaun6znarqdf6u66kh4muh`
+	URL: https://sepolia.arbiscan.io/address/0x96f1c4fe633bd7fe6deb30411979be3d0e2246b4
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+All (1) contracts were verified!
+
+Transactions saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/broadcast/DeployPasifikaPriceFeed.s.sol/421614/run-latest.json
+
+Sensitive values saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/cache/DeployPasifikaPriceFeed.s.sol/421614/run-latest.json
+No files changed, compilation skipped
+Script ran successfully.
+
+== Return ==
+0: contract PasifikaExchange 0x4FbF5A24fE538787F0eFb60D165f8A53ED311c34
+
+== Logs ==
+  Using existing price feed at: 0x96F1C4fE633bD7fE6DeB30411979bE3d0e2246b4
+  PasifikaExchange deployed at: 0x4FbF5A24fE538787F0eFb60D165f8A53ED311c34
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 421614
+
+Estimated gas price: 0.200000001 gwei
+
+Estimated total gas used for script: 1775865
+
+Estimated amount required: 0.000355173001775865 ETH
+
+==========================
+
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+##
+Start verification for (1) contracts
+Start verifying contract `0x4FbF5A24fE538787F0eFb60D165f8A53ED311c34` deployed on arbitrum-sepolia
+Compiler version: 0.8.20
+Optimizations:    200
+Constructor args: 00000000000000000000000096f1c4fe633bd7fe6deb30411979be3d0e2246b4
+
+Submitting verification for [src/exchange/PasifikaExchange.sol:PasifikaExchange] 0x4FbF5A24fE538787F0eFb60D165f8A53ED311c34.
+Submitted contract for verification:
+	Response: `OK`
+	GUID: `ff1k3jslylzir5a8cpzuwhjzu9hfxi5wm7w1e8sh4aiu6elaet`
+	URL: https://sepolia.arbiscan.io/address/0x4fbf5a24fe538787f0efb60d165f8a53ed311c34
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+All (1) contracts were verified!
+
+Transactions saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/broadcast/DeployPasifikaExchange.s.sol/421614/run-latest.json
+
+Sensitive values saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/cache/DeployPasifikaExchange.s.sol/421614/run-latest.json
