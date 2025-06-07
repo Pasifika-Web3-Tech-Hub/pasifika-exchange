@@ -99,6 +99,16 @@ The `PasifikaPriceFeed` contract integrates Chainlink's decentralized price orac
 - Dedicated ETH/USD price feed for gas estimations and native token swaps
 - Owner-controlled updates for price feed sources
 
+#### Decimal Handling and Arithmetic Safety
+
+A key implementation detail in the price feed integration is proper decimal scaling between tokens (typically 18 decimals) and Chainlink price feeds (typically 8 decimals):
+
+- **Token → USD conversion:** We scale down token amounts by dividing by 10^10 before multiplication with price to prevent arithmetic overflow
+- **USD → Token conversion:** We scale up USD amounts by multiplying by 10^10 and then divide by price
+- **Validation:** All price values are validated to be positive before calculations
+
+This approach ensures safe arithmetic operations even with large token amounts while maintaining precise conversions between different decimal representations.
+
 ### Cross-Chain Interoperability
 
 The `PasifikaCrossChainBridge` contract utilizes Chainlink's CCIP to enable secure cross-chain functionality:
