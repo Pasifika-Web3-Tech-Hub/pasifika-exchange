@@ -8,28 +8,59 @@ on:
 
 env:
   FOUNDRY_PROFILE: ci
+  FOUNDRY_SOLC_VERSION: 0.8.20
 
 jobs:
   check:
     name: Foundry project
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
-          submodules: recursive
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      # Add caching to speed up workflow
+      - name: Cache Forge dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/forge
+            ~/.cache/foundry
+            lib/
+            out/
+            cache/
+          key: ${{ runner.os }}-forge-${{ hashFiles('**/foundry.toml', '**/remappings.txt', '**/forge-cache/**') }}
+          restore-keys: |
+            ${{ runner.os }}-forge-
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
 
-      - name: Run Forge build
+      - name: Install Dependencies
+        run: forge install --no-commit
+
+      - name: Show Forge config
         run: |
           forge --version
-          forge build --sizes
+          forge config --list
+          forge remappings
+
+      - name: Build contracts
+        run: forge build --sizes
         id: build
 
       - name: Run Forge tests
         run: |
-          forge test -vv
+          # Run tests with more verbose output and lower optimizer runs for CI
+          forge test -vvv --optimize --optimizer-runs 1000
         id: test
+
+      - name: Run Coverage Report
+        if: success()
+        run: |
+          forge coverage --report summary
+        id: coverage
