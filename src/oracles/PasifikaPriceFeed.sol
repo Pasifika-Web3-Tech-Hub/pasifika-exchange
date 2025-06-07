@@ -54,7 +54,7 @@ contract PasifikaPriceFeed is IPasifikaPriceFeed, Ownable {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
         (, int256 price,,,) = priceFeed.latestRoundData();
         require(price > 0, "Invalid negative price");
-        
+
         return price;
     }
 
@@ -88,11 +88,11 @@ contract PasifikaPriceFeed is IPasifikaPriceFeed, Ownable {
 
         // Avoid overflow by scaling down token amount (from 18 decimals)
         // by dividing it by 10^10, keeping effectively 8 decimals
-        uint256 scaledAmount = amount / 10**10;
-        
+        uint256 scaledAmount = amount / 10 ** 10;
+
         // Now we can safely multiply by price and adjust for decimals
         // Result will be in USD value with the same number of decimals as the price feed (typically 8)
-        return (scaledAmount * uint256(price)) / 10**decimals;
+        return (scaledAmount * uint256(price)) / 10 ** decimals;
     }
 
     /**
@@ -108,11 +108,11 @@ contract PasifikaPriceFeed is IPasifikaPriceFeed, Ownable {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
         (, int256 price,,,) = priceFeed.latestRoundData();
         require(price > 0, "Invalid price");
-        
+
         // For token with 18 decimals from USD amount with 8 decimals (typical for Chainlink)
         // We multiply by 10^10 to get the 18-decimal representation
         // Final result will have 18 decimals (standard for ERC20 tokens)
-        return (usdAmount * 10**10) / uint256(price);
+        return (usdAmount * 10 ** 10) / uint256(price);
     }
 
     /**
