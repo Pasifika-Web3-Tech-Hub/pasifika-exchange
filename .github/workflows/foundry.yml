@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: write
+
 env:
   FOUNDRY_PROFILE: ci
   FOUNDRY_SOLC_VERSION: 0.8.20
@@ -51,8 +54,8 @@ jobs:
           
       - name: Check code formatting
         run: |
-          # Check formatting but don't fail the workflow
-          forge fmt --check || echo "Formatting issues detected, but continuing workflow"
+          # Run format check but don't fail on error
+          forge fmt --check || echo "Format check failed, proceeding with build"
 
       - name: Build contracts
         run: forge build --sizes
