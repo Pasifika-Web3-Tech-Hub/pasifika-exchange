@@ -100,7 +100,7 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
         bytes32 _circleJobId,
         bytes32 _stripeJobId,
         uint256 _linkFee,
-        address /* _treasuryAddress */  // Commented out unused parameter
+        address /* _treasuryAddress */ // Commented out unused parameter
     ) Ownable(msg.sender) {
         require(_paymentGatewayAddress != address(0), "Invalid payment gateway address");
         require(_usdcTokenAddress != address(0), "Invalid USDC token address");
