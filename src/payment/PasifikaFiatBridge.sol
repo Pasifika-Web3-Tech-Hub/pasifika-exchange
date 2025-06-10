@@ -15,34 +15,34 @@ import "./PasifikaPaymentGateway.sol";
  */
 contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
     using Chainlink for Chainlink.Request;
-    
+
     // Payment Gateway reference
     PasifikaPaymentGateway public paymentGateway;
-    
+
     // USDC token contract
     IERC20 public usdcToken;
-    
+
     // Chainlink oracle details
     address public oracle;
     bytes32 private circleJobId;
     bytes32 private stripeJobId;
     uint256 private fee;
-    
+
     // Job selector mapping for different payment processors
     mapping(PaymentProcessor => bytes32) public processorJobIds;
-    
+
     // Forex price feeds
     mapping(string => AggregatorV3Interface) public forexPriceFeeds;
-    
+
     // Supported fiat currencies
     string[] public supportedCurrencies;
-    
+
     // Payment processor types
     enum PaymentProcessor {
         Circle,
         Stripe
     }
-    
+
     // Pending payments from fiat payment processors
     struct PendingFiatPayment {
         address recipient;
@@ -53,38 +53,35 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
         bool processed;
         PaymentProcessor processor; // Which payment processor was used
     }
-    
+
     // Mapping from Chainlink request ID to pending payment ID
     mapping(bytes32 => uint256) public chainlinkRequests;
-    
+
     // Pending payments storage
     mapping(uint256 => PendingFiatPayment) public pendingPayments;
     uint256 public nextPendingPaymentId = 1;
-    
+
     // Fiat payment verification events
     event FiatPaymentInitiated(
-        uint256 indexed pendingPaymentId, 
-        string currency, 
-        uint256 amountUSDC, 
-        address recipient, 
+        uint256 indexed pendingPaymentId,
+        string currency,
+        uint256 amountUSDC,
+        address recipient,
         string paymentProcessorId,
         PaymentProcessor processor
     );
-    
+
     event FiatPaymentConfirmed(
         uint256 indexed pendingPaymentId,
         uint256 indexed paymentGatewayId,
         string paymentProcessorId,
         PaymentProcessor processor
     );
-    
+
     event FiatPaymentFailed(
-        uint256 indexed pendingPaymentId,
-        string paymentProcessorId,
-        string reason,
-        PaymentProcessor processor
+        uint256 indexed pendingPaymentId, string paymentProcessorId, string reason, PaymentProcessor processor
     );
-    
+
     /**
      * @dev Constructor initializes the contract with required parameters
      * @param _usdcTokenAddress The address of the USDC token contract
@@ -109,21 +106,21 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
         require(_usdcTokenAddress != address(0), "Invalid USDC token address");
         require(_chainlinkToken != address(0), "Invalid LINK token address");
         require(_oracle != address(0), "Invalid oracle address");
-        
+
         paymentGateway = PasifikaPaymentGateway(_paymentGatewayAddress);
         usdcToken = IERC20(_usdcTokenAddress);
-        
+
         _setChainlinkToken(_chainlinkToken);
         oracle = _oracle;
         circleJobId = _circleJobId;
         stripeJobId = _stripeJobId;
         fee = _linkFee;
-        
+
         // Set up job IDs for each payment processor
         processorJobIds[PaymentProcessor.Circle] = _circleJobId;
         processorJobIds[PaymentProcessor.Stripe] = _stripeJobId;
     }
-    
+
     /**
      * @dev Registers a forex price feed for a specific currency
      * @param currency The currency code (e.g., "NZD", "FJD", "WST")
@@ -131,19 +128,19 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
      */
     function registerForexPriceFeed(string calldata currency, address priceFeed) external onlyOwner {
         require(priceFeed != address(0), "Invalid price feed address");
-        
+
         // Check if this is a new currency
         bool isNewCurrency = forexPriceFeeds[currency] == AggregatorV3Interface(address(0));
-        
+
         // Set the price feed
         forexPriceFeeds[currency] = AggregatorV3Interface(priceFeed);
-        
+
         // Add to supported currencies if new
         if (isNewCurrency) {
             supportedCurrencies.push(currency);
         }
     }
-    
+
     /**
      * @dev Records a pending fiat payment from a payment processor
      * @param recipient The recipient of the payment
@@ -164,9 +161,9 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
     ) external onlyOwner returns (uint256) {
         require(recipient != address(0), "Invalid recipient address");
         require(amountUSDC > 0, "Amount must be greater than 0");
-        
+
         uint256 pendingPaymentId = nextPendingPaymentId++;
-        
+
         pendingPayments[pendingPaymentId] = PendingFiatPayment({
             recipient: recipient,
             amountUSDC: amountUSDC,
@@ -176,19 +173,12 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
             processed: false,
             processor: processor
         });
-        
-        emit FiatPaymentInitiated(
-            pendingPaymentId,
-            currency,
-            amountUSDC,
-            recipient,
-            paymentProcessorId,
-            processor
-        );
-        
+
+        emit FiatPaymentInitiated(pendingPaymentId, currency, amountUSDC, recipient, paymentProcessorId, processor);
+
         return pendingPaymentId;
     }
-    
+
     /**
      * @dev Requests payment verification from Chainlink oracle
      * @param pendingPaymentId The ID of the pending payment to verify
@@ -196,38 +186,35 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
     function verifyPayment(uint256 pendingPaymentId) public onlyOwner {
         require(pendingPaymentId < nextPendingPaymentId, "Invalid pending payment ID");
         require(!pendingPayments[pendingPaymentId].processed, "Payment already processed");
-        
+
         PendingFiatPayment storage payment = pendingPayments[pendingPaymentId];
-        
+
         // Get the appropriate job ID based on the payment processor
         bytes32 selectedJobId = processorJobIds[payment.processor];
-        
-        Chainlink.Request memory request = _buildChainlinkRequest(
-            selectedJobId,
-            address(this),
-            this.fulfillPaymentVerification.selector
-        );
-        
+
+        Chainlink.Request memory request =
+            _buildChainlinkRequest(selectedJobId, address(this), this.fulfillPaymentVerification.selector);
+
         // Build the request with payment data
         request._add("paymentProcessorId", payment.paymentProcessorId);
-        
+
         // Add the payment processor type (0 for Circle, 1 for Stripe)
         string memory processorType = payment.processor == PaymentProcessor.Circle ? "circle" : "stripe";
         request._add("processor", processorType);
-        
+
         // Add any processor-specific data if needed
         if (payment.processor == PaymentProcessor.Stripe) {
             // Add Stripe-specific parameters if required
             request._add("currency", payment.currency);
         }
-        
+
         // Send the request to the Chainlink oracle
         bytes32 requestId = _sendChainlinkRequest(request, fee);
-        
+
         // Store the association between the Chainlink request and the pending payment
         chainlinkRequests[requestId] = pendingPaymentId;
     }
-    
+
     /**
      * @dev Legacy function for backward compatibility
      * @param pendingPaymentId The ID of the pending payment to verify
@@ -235,7 +222,7 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
     function verifyCirclePayment(uint256 pendingPaymentId) external onlyOwner {
         verifyPayment(pendingPaymentId);
     }
-    
+
     /**
      * @dev Specific function for verifying Stripe payments
      * @param pendingPaymentId The ID of the pending payment to verify
@@ -245,10 +232,10 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
         require(!pendingPayments[pendingPaymentId].processed, "Payment already processed");
         PendingFiatPayment storage payment = pendingPayments[pendingPaymentId];
         require(payment.processor == PaymentProcessor.Stripe, "Not a Stripe payment");
-        
+
         verifyPayment(pendingPaymentId);
     }
-    
+
     /**
      * @dev Direct callback for Stripe payment verification (not via Chainlink)
      * @param _pendingPaymentId The ID of the pending payment
@@ -261,106 +248,77 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
         string calldata _statusReason
     ) external onlyOwner {
         require(_pendingPaymentId > 0 && _pendingPaymentId < nextPendingPaymentId, "Invalid pending payment ID");
-        
+
         PendingFiatPayment storage payment = pendingPayments[_pendingPaymentId];
         require(!payment.processed, "Payment already processed");
         require(payment.processor == PaymentProcessor.Stripe, "Not a Stripe payment");
-        
+
         payment.processed = true;
-        
+
         if (_paymentStatus == 1) {
             // Payment successful, process through the payment gateway
             if (usdcToken.transferFrom(owner(), address(this), payment.amountUSDC)) {
                 usdcToken.approve(address(paymentGateway), payment.amountUSDC);
-                
+
                 uint256 paymentGatewayId = paymentGateway.processTokenPayment(
-                    address(usdcToken),
-                    payment.recipient,
-                    payment.amountUSDC,
-                    payment.referenceCode
+                    address(usdcToken), payment.recipient, payment.amountUSDC, payment.referenceCode
                 );
-                
+
                 emit FiatPaymentConfirmed(
-                    _pendingPaymentId,
-                    paymentGatewayId,
-                    payment.paymentProcessorId,
-                    payment.processor
+                    _pendingPaymentId, paymentGatewayId, payment.paymentProcessorId, payment.processor
                 );
             } else {
                 emit FiatPaymentFailed(
-                    _pendingPaymentId,
-                    payment.paymentProcessorId,
-                    "USDC transfer failed",
-                    payment.processor
+                    _pendingPaymentId, payment.paymentProcessorId, "USDC transfer failed", payment.processor
                 );
             }
         } else {
             // Payment failed
-            emit FiatPaymentFailed(
-                _pendingPaymentId,
-                payment.paymentProcessorId,
-                _statusReason,
-                payment.processor
-            );
+            emit FiatPaymentFailed(_pendingPaymentId, payment.paymentProcessorId, _statusReason, payment.processor);
         }
     }
-    
+
     /**
      * @dev Callback function for Chainlink oracle response
      * @param _requestId The ID of the Chainlink request
      * @param _paymentStatus The status of the payment (1 = success, 0 = failed)
      * @param _statusReason The reason for the status (only relevant if failed)
      */
-    function fulfillPaymentVerification(
-        bytes32 _requestId,
-        uint256 _paymentStatus,
-        string calldata _statusReason
-    ) external recordChainlinkFulfillment(_requestId) {
+    function fulfillPaymentVerification(bytes32 _requestId, uint256 _paymentStatus, string calldata _statusReason)
+        external
+        recordChainlinkFulfillment(_requestId)
+    {
         uint256 pendingPaymentId = chainlinkRequests[_requestId];
         require(pendingPaymentId > 0, "Unknown request ID");
-        
+
         PendingFiatPayment storage payment = pendingPayments[pendingPaymentId];
         require(!payment.processed, "Payment already processed");
-        
+
         payment.processed = true;
-        
+
         if (_paymentStatus == 1) {
             // Payment successful, process through the payment gateway
             if (usdcToken.transferFrom(owner(), address(this), payment.amountUSDC)) {
                 usdcToken.approve(address(paymentGateway), payment.amountUSDC);
-                
+
                 uint256 paymentGatewayId = paymentGateway.processTokenPayment(
-                    address(usdcToken),
-                    payment.recipient,
-                    payment.amountUSDC,
-                    payment.referenceCode
+                    address(usdcToken), payment.recipient, payment.amountUSDC, payment.referenceCode
                 );
-                
+
                 emit FiatPaymentConfirmed(
-                    pendingPaymentId,
-                    paymentGatewayId,
-                    payment.paymentProcessorId,
-                    payment.processor
+                    pendingPaymentId, paymentGatewayId, payment.paymentProcessorId, payment.processor
                 );
             } else {
                 emit FiatPaymentFailed(
-                    pendingPaymentId,
-                    payment.paymentProcessorId,
-                    "USDC transfer failed",
-                    payment.processor
+                    pendingPaymentId, payment.paymentProcessorId, "USDC transfer failed", payment.processor
                 );
             }
         } else {
             // Payment failed
-            emit FiatPaymentFailed(
-                pendingPaymentId,
-                payment.paymentProcessorId,
-                _statusReason,
-                payment.processor
-            );
+            emit FiatPaymentFailed(pendingPaymentId, payment.paymentProcessorId, _statusReason, payment.processor);
         }
     }
-    
+
     /**
      * @dev Gets the latest exchange rate for a supported currency to USD
      * @param currency The fiat currency code
@@ -369,11 +327,11 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
     function getExchangeRate(string calldata currency) public view returns (int256) {
         AggregatorV3Interface priceFeed = forexPriceFeeds[currency];
         require(address(priceFeed) != address(0), "Unsupported currency");
-        
-        (, int256 price, , , ) = priceFeed.latestRoundData();
+
+        (, int256 price,,,) = priceFeed.latestRoundData();
         return price;
     }
-    
+
     /**
      * @notice Convert fiat currency amount to USDC
      * @param amount Amount in fiat currency (with 6 decimals for simplicity)
@@ -383,24 +341,24 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
     function convertToUSDC(uint256 amount, string calldata currency) public view returns (uint256 usdcAmount) {
         int256 price = getExchangeRate(currency);
         require(price > 0, "Invalid price feed");
-        
+
         // Convert amount to USD based on exchange rate
         // Chainlink price feeds return 8 decimals, USDC has 6 decimals
         if (amount > 0) {
             // Convert price to uint256 since it's guaranteed positive
             uint256 priceUint = uint256(price);
-            
+
             // In the test, we're passing 100 * 10^6 (100 NZD) and the price feed is 61000000 (0.61 USD)
             // The expected result is 61 * 10^6 (61 USDC)
             // Simply multiply amount by price and keep the 6 decimals
-            usdcAmount = (amount * priceUint) / 10**8;
+            usdcAmount = (amount * priceUint) / 10 ** 8;
         } else {
             usdcAmount = 0;
         }
-        
+
         return usdcAmount;
     }
-    
+
     /**
      * @dev Withdraws any LINK tokens to the owner
      */
@@ -408,7 +366,7 @@ contract PasifikaFiatBridge is Ownable, ReentrancyGuard, ChainlinkClient {
         LinkTokenInterface link = LinkTokenInterface(_chainlinkTokenAddress());
         require(link.transfer(msg.sender, link.balanceOf(address(this))), "Unable to transfer");
     }
-    
+
     /**
      * @dev Gets the list of all supported fiat currencies
      * @return Array of supported currency codes

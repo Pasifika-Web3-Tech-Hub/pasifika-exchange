@@ -10,9 +10,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // Simple mock USDC token for testing
 contract MockUSDC is ERC20 {
     constructor() ERC20("USD Coin", "USDC") {
-        _mint(msg.sender, 1000000 * 10**6); // USDC uses 6 decimals
+        _mint(msg.sender, 1000000 * 10 ** 6); // USDC uses 6 decimals
     }
-    
+
     function decimals() public view virtual override returns (uint8) {
         return 6; // USDC uses 6 decimals
     }
@@ -21,7 +21,7 @@ contract MockUSDC is ERC20 {
 // Simple mock LINK token for testing
 contract MockLINK is ERC20 {
     constructor() ERC20("Chainlink Token", "LINK") {
-        _mint(msg.sender, 1000000 * 10**18);
+        _mint(msg.sender, 1000000 * 10 ** 18);
     }
 }
 
@@ -32,56 +32,49 @@ contract PasifikaFiatBridgeTest is Test {
     MockLINK public linkToken;
     MockV3Aggregator public nzdUsdFeed;
     MockV3Aggregator public fjdUsdFeed;
-    
+
     address public treasury;
     address public deployer;
     address public recipient;
     address public oracle;
-    
+
     bytes32 constant jobId = "6f0099fac544ae98bf38af69587516fd";
-    uint256 constant fee = 0.1 * 10**18; // 0.1 LINK
-    
+    uint256 constant fee = 0.1 * 10 ** 18; // 0.1 LINK
+
     // Network name for this test
     string constant networkName = "Arbitrum";
-    
+
     // Mock oracle call using low-level call
-    function mockOracleCall(
-        bytes32 _requestId,
-        uint256 _paymentStatus,
-        string memory _statusReason
-    ) public {
-        (bool success, ) = address(fiatBridge).call(
+    function mockOracleCall(bytes32 _requestId, uint256 _paymentStatus, string memory _statusReason) public {
+        (bool success,) = address(fiatBridge).call(
             abi.encodeWithSelector(
-                fiatBridge.fulfillPaymentVerification.selector,
-                _requestId,
-                _paymentStatus,
-                _statusReason
+                fiatBridge.fulfillPaymentVerification.selector, _requestId, _paymentStatus, _statusReason
             )
         );
         assertTrue(success, "Mock fulfillment call failed");
     }
-    
+
     function setUp() public {
         // Setup addresses
         treasury = makeAddr("treasury");
         deployer = makeAddr("deployer");
         recipient = makeAddr("recipient");
         oracle = makeAddr("oracle");
-        
+
         // Deploy token contracts
         vm.startPrank(deployer);
-        
+
         // Deploy payment gateway with treasury address and network name
         paymentGateway = new PasifikaPaymentGateway(treasury, networkName);
-        
+
         // Deploy mock tokens
         usdcToken = new MockUSDC();
         linkToken = new MockLINK();
-        
+
         // Deploy price feed mocks
         nzdUsdFeed = new MockV3Aggregator(8, 61_000_000); // 0.61 USD per NZD
         fjdUsdFeed = new MockV3Aggregator(8, 45_000_000); // 0.45 USD per FJD
-        
+
         // Deploy the fiat bridge with support for both Circle and Stripe
         fiatBridge = new PasifikaFiatBridge(
             address(usdcToken),
@@ -90,67 +83,67 @@ contract PasifikaFiatBridgeTest is Test {
             oracle,
             bytes32("circle-job-id"),
             bytes32("stripe-job-id"),
-            0.1 * 10**18, // 0.1 LINK fee
+            0.1 * 10 ** 18, // 0.1 LINK fee
             treasury
         );
-        
+
         // Register price feeds
         fiatBridge.registerForexPriceFeed("NZD", address(nzdUsdFeed));
         fiatBridge.registerForexPriceFeed("FJD", address(fjdUsdFeed));
-        
+
         // Fund contracts with necessary tokens
-        linkToken.transfer(address(fiatBridge), 100 * 10**18); // 100 LINK
-        usdcToken.transfer(deployer, 100000 * 10**6); // 100,000 USDC
+        linkToken.transfer(address(fiatBridge), 100 * 10 ** 18); // 100 LINK
+        usdcToken.transfer(deployer, 100000 * 10 ** 6); // 100,000 USDC
         vm.stopPrank();
     }
-    
+
     function testExchangeRates() public {
         // Test NZD rate
         int256 nzdRate = fiatBridge.getExchangeRate("NZD");
         assertEq(nzdRate, 61000000); // 0.61 USD per 1 NZD
-        
+
         // Test FJD rate
         int256 fjdRate = fiatBridge.getExchangeRate("FJD");
         assertEq(fjdRate, 45000000); // 0.45 USD per 1 FJD
-        
+
         // Verify supported currencies
         string[] memory currencies = fiatBridge.getSupportedCurrencies();
         assertEq(currencies.length, 2);
         assertEq(currencies[0], "NZD");
         assertEq(currencies[1], "FJD");
     }
-    
+
     function testCurrencyConversion() public {
         // Convert 100 NZD to USDC (with 6 decimals)
         // 100 NZD * 0.61 USD/NZD = 61 USD = 61 USDC
         uint256 nzdResult = fiatBridge.convertToUSDC(
-            100 * 10**6, // 100 NZD with 6 decimals for simplicity
+            100 * 10 ** 6, // 100 NZD with 6 decimals for simplicity
             "NZD"
         );
-        assertEq(nzdResult, 61 * 10**6, "NZD conversion incorrect");
-        
+        assertEq(nzdResult, 61 * 10 ** 6, "NZD conversion incorrect");
+
         // Convert 200 FJD to USDC
         // 200 FJD * 0.45 USD/FJD = 90 USD = 90 USDC
         uint256 fjdResult = fiatBridge.convertToUSDC(
-            200 * 10**6, // 200 FJD with 6 decimals
+            200 * 10 ** 6, // 200 FJD with 6 decimals
             "FJD"
         );
-        assertEq(fjdResult, 90 * 10**6, "FJD conversion incorrect");
+        assertEq(fjdResult, 90 * 10 ** 6, "FJD conversion incorrect");
     }
-    
+
     function testPendingFiatPayment() public {
         vm.prank(deployer);
         uint256 pendingId = fiatBridge.recordPendingFiatPayment(
             recipient,
-            50 * 10**6, // 50 USDC
+            50 * 10 ** 6, // 50 USDC
             "NZD",
             "circle-payment-123",
             "order-ref-456",
             PasifikaFiatBridge.PaymentProcessor.Circle
         );
-        
+
         assertEq(pendingId, 1, "First pending ID should be 1");
-        
+
         // Verify the payment was recorded correctly
         (
             address storedRecipient,
@@ -161,48 +154,44 @@ contract PasifikaFiatBridgeTest is Test {
             bool processed,
             PasifikaFiatBridge.PaymentProcessor processor
         ) = extractPendingPayment(pendingId);
-        
+
         assertEq(storedRecipient, recipient);
-        assertEq(storedAmount, 50 * 10**6);
+        assertEq(storedAmount, 50 * 10 ** 6);
         assertEq(storedCurrency, "NZD");
         assertEq(storedCircleId, "circle-payment-123");
         assertEq(storedRef, "order-ref-456");
         assertFalse(processed);
     }
-    
+
     function testPaymentVerification() public {
         // Given that the ChainlinkClient's recordChainlinkFulfillment modifier is causing issues,
         // we'll test the payment processing directly by calling the PasifikaPaymentGateway
-        
-        uint256 amountUSDC = 50 * 10**6; // 50 USDC
-        
+
+        uint256 amountUSDC = 50 * 10 ** 6; // 50 USDC
+
         // Set up approvals and token balances
         vm.startPrank(deployer);
         // Ensure deployer has enough USDC approved to the gateway
         usdcToken.approve(address(paymentGateway), amountUSDC);
         vm.stopPrank();
-        
+
         // Process a payment through the payment gateway directly
         vm.prank(deployer);
-        uint256 paymentId = paymentGateway.processTokenPayment(
-            address(usdcToken),
-            recipient,
-            amountUSDC,
-            "test-reference-code"
-        );
-        
+        uint256 paymentId =
+            paymentGateway.processTokenPayment(address(usdcToken), recipient, amountUSDC, "test-reference-code");
+
         // Verify payment was processed
         assertGt(paymentId, 0, "Payment ID should be greater than 0");
-        
+
         // Calculate fees - by default users are "guests" with 1% fee
         uint256 guestFee = paymentGateway.guestFee(); // 100 basis points (1.0%)
         uint256 feeAmount = (amountUSDC * guestFee) / 10000;
         uint256 expectedRecipientAmount = amountUSDC - feeAmount;
-        
+
         // Verify balances
         assertEq(usdcToken.balanceOf(recipient), expectedRecipientAmount, "Recipient did not receive correct amount");
         assertEq(usdcToken.balanceOf(treasury), feeAmount, "Treasury did not receive fee");
-        
+
         // Now test that the PasifikaFiatBridge can record pending payments correctly
         vm.prank(deployer);
         uint256 pendingId = fiatBridge.recordPendingFiatPayment(
@@ -213,7 +202,7 @@ contract PasifikaFiatBridgeTest is Test {
             "order-ref-123",
             PasifikaFiatBridge.PaymentProcessor.Circle
         );
-        
+
         // Verify pending payment was recorded
         (
             address storedRecipient,
@@ -224,7 +213,7 @@ contract PasifikaFiatBridgeTest is Test {
             bool processed,
             PasifikaFiatBridge.PaymentProcessor processor
         ) = extractPendingPayment(pendingId);
-        
+
         assertEq(storedRecipient, recipient);
         assertEq(storedAmount, amountUSDC);
         assertEq(storedCurrency, "NZD");
@@ -232,82 +221,82 @@ contract PasifikaFiatBridgeTest is Test {
         assertEq(storedRef, "order-ref-123");
         assertFalse(processed);
     }
-    
+
     function testFailedPaymentVerification() public {
         // Record a pending payment
         vm.prank(deployer);
         uint256 pendingId = fiatBridge.recordPendingFiatPayment(
             recipient,
-            50 * 10**6, // 50 USDC
+            50 * 10 ** 6, // 50 USDC
             "NZD",
             "circle-payment-789",
             "order-ref-123",
             PasifikaFiatBridge.PaymentProcessor.Circle
         );
-        
+
         // Request verification
         vm.prank(deployer);
         fiatBridge.verifyCirclePayment(pendingId);
-        
+
         // Simulate failed payment verification from Chainlink oracle
         bytes32 requestId = bytes32(uint256(2)); // Mock request ID
         uint256 paymentStatus = 0; // Failed
         string memory reason = "Payment declined";
-        
+
         // Store relationship between request ID and pending payment
         vm.store(
             address(fiatBridge),
             keccak256(abi.encode(requestId, uint256(3))), // slot for chainlinkRequests mapping
             bytes32(pendingId)
         );
-        
+
         // Mock the oracle callback for failure
         vm.prank(oracle);
         mockFulfillPaymentVerification(requestId, paymentStatus, reason);
-        
+
         // Verify the payment was marked as processed but no funds transferred
-        (, , , , , bool processed, ) = extractPendingPayment(pendingId);
+        (,,,,, bool processed,) = extractPendingPayment(pendingId);
         assertTrue(processed);
-        
+
         // Verify no funds were transferred
         assertEq(usdcToken.balanceOf(recipient), 0, "Recipient should not receive funds on failed payment");
         assertEq(usdcToken.balanceOf(treasury), 0, "Treasury should not receive fees on failed payment");
     }
-    
+
     function testStripePaymentVerification() public {
         // Record a pending Stripe payment
         vm.prank(deployer);
         uint256 pendingId = fiatBridge.recordPendingFiatPayment(
             recipient,
-            50 * 10**6, // 50 USDC
+            50 * 10 ** 6, // 50 USDC
             "NZD",
             "stripe-payment-123",
             "order-ref-456",
             PasifikaFiatBridge.PaymentProcessor.Stripe
         );
-        
+
         // Simulate successful payment verification from Stripe
         uint256 paymentStatus = 1; // Success
         string memory reason = "Payment successful";
-        
+
         // Mint USDC tokens to the deployer for testing
-        mintUsdcToDeployer(10000 * 10**6);
-        
+        mintUsdcToDeployer(10000 * 10 ** 6);
+
         // Now approve and transfer should work
         vm.startPrank(deployer);
-        usdcToken.approve(address(fiatBridge), 10000 * 10**6); // Approve a large amount
-        
+        usdcToken.approve(address(fiatBridge), 10000 * 10 ** 6); // Approve a large amount
+
         // Wrap the call in try/catch to debug the revert reason
         try fiatBridge.fulfillStripePaymentVerification(pendingId, paymentStatus, reason) {
             vm.stopPrank();
-            
+
             // Verify the payment was marked as processed and funds transferred
-            (, , , , , bool processed, ) = extractPendingPayment(pendingId);
+            (,,,,, bool processed,) = extractPendingPayment(pendingId);
             assertTrue(processed);
-            
+
             // Verify funds were transferred (with 1% fee deducted: 50 USDC - 0.5 USDC = 49.5 USDC)
-            assertEq(usdcToken.balanceOf(recipient), 49.5 * 10**6, "Recipient should receive funds minus fee");
-            assertEq(usdcToken.balanceOf(treasury), 0.5 * 10**6, "Treasury should receive the 1% fee");
+            assertEq(usdcToken.balanceOf(recipient), 49.5 * 10 ** 6, "Recipient should receive funds minus fee");
+            assertEq(usdcToken.balanceOf(treasury), 0.5 * 10 ** 6, "Treasury should receive the 1% fee");
         } catch Error(string memory error) {
             vm.stopPrank();
             emit log_string("Error: ");
@@ -316,26 +305,26 @@ contract PasifikaFiatBridgeTest is Test {
             fail();
         }
     }
-    
+
     function testStripePaymentProcessing() public {
         // Mint USDC tokens to the deployer for testing
-        mintUsdcToDeployer(10000 * 10**6);
-        
+        mintUsdcToDeployer(10000 * 10 ** 6);
+
         // Approve USDC token transfers from deployer to contract
         vm.prank(deployer);
-        usdcToken.approve(address(fiatBridge), 10000 * 10**6); // Approve a large amount
-        
+        usdcToken.approve(address(fiatBridge), 10000 * 10 ** 6); // Approve a large amount
+
         // Record a pending Stripe payment
         vm.prank(deployer);
         uint256 pendingId = fiatBridge.recordPendingFiatPayment(
             recipient,
-            50 * 10**6, // 50 USDC
+            50 * 10 ** 6, // 50 USDC
             "NZD",
             "pi_3OgarLxxxxxxxxxxxxxxxxxxx", // Stripe payment intent ID format
             "order-ref-stripe-123",
             PasifikaFiatBridge.PaymentProcessor.Stripe
         );
-        
+
         // Verify the pending payment was recorded correctly
         (
             address storedRecipient,
@@ -346,26 +335,26 @@ contract PasifikaFiatBridgeTest is Test {
             bool processed,
             PasifikaFiatBridge.PaymentProcessor processor
         ) = extractPendingPayment(pendingId);
-        
+
         assertEq(storedRecipient, recipient);
-        assertEq(storedAmount, 50 * 10**6);
+        assertEq(storedAmount, 50 * 10 ** 6);
         assertEq(storedCurrency, "NZD");
         assertEq(storedPaymentId, "pi_3OgarLxxxxxxxxxxxxxxxxxxx");
         assertEq(storedRef, "order-ref-stripe-123");
         assertFalse(processed);
-        assertEq(uint(processor), uint(PasifikaFiatBridge.PaymentProcessor.Stripe));
-        
+        assertEq(uint256(processor), uint256(PasifikaFiatBridge.PaymentProcessor.Stripe));
+
         // Simulate successful payment verification from Stripe
         uint256 paymentStatus = 1; // Success
         string memory reason = "Payment successful";
-        
+
         // Request verification and process it directly
         vm.startPrank(deployer);
         try fiatBridge.fulfillStripePaymentVerification(pendingId, paymentStatus, reason) {
             vm.stopPrank();
-            
+
             // Verify payment was processed
-            (, , , , , bool paymentProcessed, ) = extractPendingPayment(pendingId);
+            (,,,,, bool paymentProcessed,) = extractPendingPayment(pendingId);
             assertTrue(paymentProcessed, "Payment should be marked as processed");
         } catch Error(string memory error) {
             vm.stopPrank();
@@ -375,38 +364,42 @@ contract PasifikaFiatBridgeTest is Test {
             fail();
         }
     }
-    
+
     // Helper function to extract pending payment data
-    function extractPendingPayment(
-        uint256 _pendingId
-    ) internal view returns (
-        address, // recipient
-        uint256, // amountUSDC
-        string memory, // currency
-        string memory, // paymentProcessorId
-        string memory, // referenceCode
-        bool, // processed
-        PasifikaFiatBridge.PaymentProcessor // processor type
-    ) {
+    function extractPendingPayment(uint256 _pendingId)
+        internal
+        view
+        returns (
+            address, // recipient
+            uint256, // amountUSDC
+            string memory, // currency
+            string memory, // paymentProcessorId
+            string memory, // referenceCode
+            bool, // processed
+            PasifikaFiatBridge.PaymentProcessor // processor type
+        )
+    {
         // When a struct mapping is made public, Solidity generates a getter function
         // that returns all the fields of the struct as a tuple
         return fiatBridge.pendingPayments(_pendingId);
     }
-    
+
     /**
      * @dev Mock Chainlink oracle callback for payment verification
      */
     function mockFulfillPaymentVerification(bytes32 requestId, uint256 paymentStatus, string memory reason) internal {
         fiatBridge.fulfillPaymentVerification(requestId, paymentStatus, reason);
     }
-    
+
     /**
      * @dev Mock Stripe callback for payment verification
      */
-    function mockFulfillStripePaymentVerification(uint256 pendingId, uint256 paymentStatus, string memory reason) internal {
+    function mockFulfillStripePaymentVerification(uint256 pendingId, uint256 paymentStatus, string memory reason)
+        internal
+    {
         fiatBridge.fulfillStripePaymentVerification(pendingId, paymentStatus, reason);
     }
-    
+
     /**
      * @dev Helper function to mint USDC tokens to the deployer
      */

@@ -22,10 +22,7 @@ contract DeployPasifikaPaymentGateway is Script {
         vm.startBroadcast();
 
         // Deploy the payment gateway contract
-        PasifikaPaymentGateway paymentGateway = new PasifikaPaymentGateway(
-            treasuryAddress,
-            networkName
-        );
+        PasifikaPaymentGateway paymentGateway = new PasifikaPaymentGateway(treasuryAddress, networkName);
 
         vm.stopBroadcast();
 
