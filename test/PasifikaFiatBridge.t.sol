@@ -97,7 +97,7 @@ contract PasifikaFiatBridgeTest is Test {
         vm.stopPrank();
     }
 
-    function testExchangeRates() public {
+    function testExchangeRates() public view {
         // Test NZD rate
         int256 nzdRate = fiatBridge.getExchangeRate("NZD");
         assertEq(nzdRate, 61000000); // 0.61 USD per 1 NZD
@@ -113,7 +113,7 @@ contract PasifikaFiatBridgeTest is Test {
         assertEq(currencies[1], "FJD");
     }
 
-    function testCurrencyConversion() public {
+    function testCurrencyConversion() public view {
         // Convert 100 NZD to USDC (with 6 decimals)
         // 100 NZD * 0.61 USD/NZD = 61 USD = 61 USDC
         uint256 nzdResult = fiatBridge.convertToUSDC(
@@ -152,7 +152,8 @@ contract PasifikaFiatBridgeTest is Test {
             string memory storedCircleId,
             string memory storedRef,
             bool processed,
-            PasifikaFiatBridge.PaymentProcessor processor
+            // Unused parameter, commented out to avoid compiler warning
+            /* PasifikaFiatBridge.PaymentProcessor processor */
         ) = extractPendingPayment(pendingId);
 
         assertEq(storedRecipient, recipient);
@@ -211,7 +212,8 @@ contract PasifikaFiatBridgeTest is Test {
             string memory storedCircleId,
             string memory storedRef,
             bool processed,
-            PasifikaFiatBridge.PaymentProcessor processor
+            // Unused parameter, commented out to avoid compiler warning
+            /* PasifikaFiatBridge.PaymentProcessor processor */
         ) = extractPendingPayment(pendingId);
 
         assertEq(storedRecipient, recipient);
