@@ -1,0 +1,221 @@
+No files changed, compilation skipped
+Script ran successfully.
+
+== Return ==
+0: contract PasifikaPriceFeed 0xefa234b37144B3Ea7265191344F625b858b186DE
+
+== Logs ==
+  Using ETH/USD feed at: 0x694AA1769357215DE4FAC081bf1f309aDC325306
+  PasifikaPriceFeed deployed at: 0xefa234b37144B3Ea7265191344F625b858b186DE
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 421614
+
+Estimated gas price: 0.200000001 gwei
+
+Estimated total gas used for script: 895745
+
+Estimated amount required: 0.000179149000895745 ETH
+
+==========================
+
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+##
+Start verification for (1) contracts
+Start verifying contract `0xefa234b37144B3Ea7265191344F625b858b186DE` deployed on arbitrum-sepolia
+Compiler version: 0.8.20
+Optimizations:    200
+Constructor args: 000000000000000000000000694aa1769357215de4fac081bf1f309adc325306
+
+Submitting verification for [src/oracles/PasifikaPriceFeed.sol:PasifikaPriceFeed] 0xefa234b37144B3Ea7265191344F625b858b186DE.
+Submitted contract for verification:
+	Response: `OK`
+	GUID: `7i1mr1vwivfcupitaut5nxgfqgqft9xnwkajk1hhzhxi6xgzxi`
+	URL: https://sepolia.arbiscan.io/address/0xefa234b37144b3ea7265191344f625b858b186de
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+All (1) contracts were verified!
+
+Transactions saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/broadcast/DeployPasifikaPriceFeed.s.sol/421614/run-latest.json
+
+Sensitive values saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/cache/DeployPasifikaPriceFeed.s.sol/421614/run-latest.json
+
+No files changed, compilation skipped
+Script ran successfully.
+
+== Return ==
+0: contract PasifikaExchange 0xA2f7a364D38067757C9cD5627fDB7c0F8A641Ee9
+
+== Logs ==
+  Using existing price feed at: 0xefa234b37144B3Ea7265191344F625b858b186DE
+  PasifikaExchange deployed at: 0xA2f7a364D38067757C9cD5627fDB7c0F8A641Ee9
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 421614
+
+Estimated gas price: 0.200000001 gwei
+
+Estimated total gas used for script: 1776050
+
+Estimated amount required: 0.00035521000177605 ETH
+
+==========================
+
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+##
+Start verification for (1) contracts
+Start verifying contract `0xA2f7a364D38067757C9cD5627fDB7c0F8A641Ee9` deployed on arbitrum-sepolia
+Compiler version: 0.8.20
+Optimizations:    200
+Constructor args: 000000000000000000000000efa234b37144b3ea7265191344f625b858b186de
+
+Submitting verification for [src/exchange/PasifikaExchange.sol:PasifikaExchange] 0xA2f7a364D38067757C9cD5627fDB7c0F8A641Ee9.
+Submitted contract for verification:
+	Response: `OK`
+	GUID: `fhd9692lw9bfbaqr79ezyaccx61y9jbriaupbmf1ha486igmjf`
+	URL: https://sepolia.arbiscan.io/address/0xa2f7a364d38067757c9cd5627fdb7c0f8a641ee9
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+All (1) contracts were verified!
+
+Transactions saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/broadcast/DeployPasifikaExchange.s.sol/421614/run-latest.json
+
+Sensitive values saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/cache/DeployPasifikaExchange.s.sol/421614/run-latest.json
+
+No files changed, compilation skipped
+Script ran successfully.
+
+== Return ==
+0: contract PasifikaPaymentGateway 0x3c86F9180037fCD53f2bd5bF9146B6240821a306
+
+== Logs ==
+  Deploying PasifikaPaymentGateway to Arbitrum network
+  Treasury address: 0xE1a0Ae0FC16CfC6ABf251c9e7FCf6b6B9bde9aAA
+  PasifikaPaymentGateway deployed at: 0x3c86F9180037fCD53f2bd5bF9146B6240821a306
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 421614
+
+Estimated gas price: 0.200000001 gwei
+
+Estimated total gas used for script: 2469246
+
+Estimated amount required: 0.000493849202469246 ETH
+
+==========================
+
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+##
+Start verification for (1) contracts
+Start verifying contract `0x3c86F9180037fCD53f2bd5bF9146B6240821a306` deployed on arbitrum-sepolia
+Compiler version: 0.8.20
+Optimizations:    200
+Constructor args: 000000000000000000000000e1a0ae0fc16cfc6abf251c9e7fcf6b6b9bde9aaa00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000008417262697472756d000000000000000000000000000000000000000000000000
+
+Submitting verification for [src/payment/PasifikaPaymentGateway.sol:PasifikaPaymentGateway] 0x3c86F9180037fCD53f2bd5bF9146B6240821a306.
+Submitted contract for verification:
+	Response: `OK`
+	GUID: `qxmxbvv2d19wcdzbxsgafktdhy647dqeeuv44kzyjajfsnyszu`
+	URL: https://sepolia.arbiscan.io/address/0x3c86f9180037fcd53f2bd5bf9146b6240821a306
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+All (1) contracts were verified!
+
+Transactions saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/broadcast/DeployPasifikaPaymentGateway.s.sol/421614/run-latest.json
+
+Sensitive values saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/cache/DeployPasifikaPaymentGateway.s.sol/421614/run-latest.json
+
+No files changed, compilation skipped
+Script ran successfully.
+
+== Return ==
+0: contract PasifikaFiatBridge 0x4D2FECe0a2D32685d364705Ae56F46eDD1144461
+
+== Logs ==
+  Using existing payment gateway at: 0x3c86F9180037fCD53f2bd5bF9146B6240821a306
+  Deploying PasifikaFiatBridge to Arbitrum network
+  Using PasifikaPaymentGateway at: 0x3c86F9180037fCD53f2bd5bF9146B6240821a306
+  USDC Token address: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d
+  LINK Token address: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E
+  Chainlink Oracle address: 0x9f4E3DA1D1a089B8D2E5320f4c1114631B5363dD
+  Treasury address: 0xE1a0Ae0FC16CfC6ABf251c9e7FCf6b6B9bde9aAA
+  Circle JobId: 25503004571825233702531806557467589945334614128797561568138161357183647835748
+  Stripe JobId: 8234104122419153896766082834368325185836758793849283143825308940974890684980
+  PasifikaFiatBridge deployed at: 0x4D2FECe0a2D32685d364705Ae56F46eDD1144461
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 421614
+
+Estimated gas price: 0.200000001 gwei
+
+Estimated total gas used for script: 3658440
+
+Estimated amount required: 0.00073168800365844 ETH
+
+==========================
+
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+##
+Start verification for (1) contracts
+Start verifying contract `0x4D2FECe0a2D32685d364705Ae56F46eDD1144461` deployed on arbitrum-sepolia
+Compiler version: 0.8.20
+Optimizations:    200
+Constructor args: 00000000000000000000000075faf114eafb1bdbe2f0316df893fd58ce46aa4d0000000000000000000000003c86f9180037fcd53f2bd5bf9146b6240821a306000000000000000000000000b1d4538b4571d411f07960ef2838ce337fe1e80e0000000000000000000000009f4e3da1d1a089b8d2e5320f4c1114631b5363dd386230663030396661633534346165393862663338616636393538373531666412345678901234567890123456789012345678901234567890123456789012340000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000e1a0ae0fc16cfc6abf251c9e7fcf6b6b9bde9aaa
+
+Submitting verification for [src/payment/PasifikaFiatBridge.sol:PasifikaFiatBridge] 0x4D2FECe0a2D32685d364705Ae56F46eDD1144461.
+Submitted contract for verification:
+	Response: `OK`
+	GUID: `lf7jzedifdrsuqbufhiw7lsigg2eluzewcsa8vvgrmvmysfjex`
+	URL: https://sepolia.arbiscan.io/address/0x4d2fece0a2d32685d364705ae56f46edd1144461
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+All (1) contracts were verified!
+
+Transactions saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/broadcast/DeployPasifikaFiatBridge.s.sol/421614/run-latest.json
+
+Sensitive values saved to: /home/user/Documents/pasifika-web3-tech-hub/pasifika-exchange/cache/DeployPasifikaFiatBridge.s.sol/421614/run-latest.json
+

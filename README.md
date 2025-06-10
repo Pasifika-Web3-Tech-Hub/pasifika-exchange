@@ -19,6 +19,7 @@ This project implements a decentralized exchange (DEX) to provide essential trad
 -   **PasifikaExchange**: An AMM-style (Automated Market Maker) DEX that allows cross-chain trading between tokens on multiple EVM Compatible networks
 -   **PasifikaPriceFeed**: Chainlink oracle integration for reliable token price data in USD
 -   **PasifikaCrossChainBridge**: Chainlink CCIP (Cross-Chain Interoperability Protocol) integration enabling secure messaging and token transfers between networks
+-   **PasifikaFiatBridge & PaymentGateway**: On-chain fiat payment system supporting multiple payment processors (Circle and Stripe) with Chainlink oracle integration for payment verification
 -   **Multi-Network Support**: Initially deployed on Arbitrum with active interoperability for Linea and RootStock
 
 ### Technology Stack
@@ -31,6 +32,8 @@ The Pasifika Exchange is built with:
 -   **OpenZeppelin**: Secure contract implementations
 -   **EVM Compatible Networks**: Multiple Layer 2 and sidechain solutions (Arbitrum, Linea, RootStock)
 -   **Cross-Chain Interoperability Protocol (CCIP)**: For secure messaging and asset transfers between networks
+-   **Fiat Payment Processors**: Integration with Circle and Stripe for multi-currency fiat payments
+-   **USDC**: Stablecoin used for on-chain settlement of fiat payments
 
 ## Frontend Integration
 
@@ -108,6 +111,64 @@ A key implementation detail in the price feed integration is proper decimal scal
 - **Validation:** All price values are validated to be positive before calculations
 
 This approach ensures safe arithmetic operations even with large token amounts while maintaining precise conversions between different decimal representations.
+
+### Fiat Payment Bridge & Multi-Processor Integration
+
+The Pasifika payment system consists of two key contracts:
+
+- **PasifikaFiatBridge**: Manages fiat payment processing with multi-processor support (Circle and Stripe)
+- **PasifikaPaymentGateway**: Handles on-chain USDC transactions and fees
+
+#### Key Features
+
+- **Multi-Processor Support**: Seamless integration with multiple payment processors (Circle and Stripe) with processor-specific job IDs for Chainlink oracle requests
+- **Chainlink Oracle Integration**: Off-chain payment verification through Chainlink oracles
+- **Secure Payment Flow**:
+  1. Record pending fiat payment with payment processor reference code
+  2. Verify payment status through Chainlink oracle
+  3. Process verified payments through the payment gateway
+- **Fee Management**: Configurable fee structure with treasury collection
+- **Currency Support**: Multiple fiat currencies (FJD, USD, NZD) with automatic conversion rates
+
+#### Example React Hook Integration
+
+```typescript
+// /home/user/Documents/pasifika-web3-tech-hub/pasifika-web3-fe/lib/hooks/useFiatBridge.ts
+
+import { useWriteContract, useReadContract } from 'wagmi';
+import PasifikaFiatBridgeInfo from '../deployed_contracts/PasifikaFiatBridge.json';
+import PasifikaFiatBridgeABI from '../deployed_contracts/PasifikaFiatBridge_ABI.json';
+
+export function useFiatBridge() {
+  const { writeContract } = useWriteContract();
+  
+  // Record a pending fiat payment
+  const recordPayment = async (recipient, amountUSDC, currency, paymentId, referenceCode, processor) => {
+    return writeContract({
+      address: PasifikaFiatBridgeInfo.address as `0x${string}`,
+      abi: PasifikaFiatBridgeABI as any,
+      functionName: 'recordPendingFiatPayment',
+      args: [recipient, amountUSDC, currency, paymentId, referenceCode, processor],
+    });
+  };
+  
+  // Verify a payment with a specific processor
+  const verifyPayment = async (pendingPaymentId) => {
+    return writeContract({
+      address: PasifikaFiatBridgeInfo.address as `0x${string}`,
+      abi: PasifikaFiatBridgeABI as any,
+      functionName: 'verifyPayment',
+      args: [pendingPaymentId],
+    });
+  };
+  
+  return {
+    recordPayment,
+    verifyPayment,
+    // other functions
+  };
+}
+```
 
 ### Cross-Chain Interoperability
 
