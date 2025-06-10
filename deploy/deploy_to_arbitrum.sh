@@ -63,33 +63,71 @@ forge build --extra-output-files abi --extra-output-files bin
 echo "Deploying PasifikaPriceFeed..."
 echo "ETH/USD Feed Address: $ETH_USD_FEED"
 export ETH_USD_FEED
+export USDC_ADDRESS=${USDC_ADDRESS:-"0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d"}  # Arbitrum Sepolia USDC
+export LINK_TOKEN_ADDRESS=${LINK_ADDRESS:-"0xb1D4538B4571d411F07960EF2838Ce337FE1E80E"}  # Arbitrum Sepolia LINK
+export CHAINLINK_ORACLE_ADDRESS=${CHAINLINK_ORACLE_ADDRESS:-"0x9f4e3da1d1a089b8d2e5320f4c1114631b5363dd"}  # Default Oracle
+export TREASURY_ADDRESS=${TREASURY_ADDRESS:-"0xE1a0Ae0FC16CfC6ABf251c9e7FCf6b6B9bde9aAA"}  # Default Treasury
+export CHAINLINK_CIRCLE_JOB_ID=${CHAINLINK_CIRCLE_JOB_ID:-"3862306630303966616335343461653938626633386166363935383735316664"}
+export CHAINLINK_STRIPE_JOB_ID=${CHAINLINK_STRIPE_JOB_ID:-"1234567890123456789012345678901234567890123456789012345678901234"}
+export CHAINLINK_FEE=${CHAINLINK_FEE:-"1000000000000000000"}  # 1 LINK
 
-# Deploy the contracts using Foundry scripts with wallet alias
-PRICE_FEED_OUTPUT=$(forge script script/DeployPasifikaPriceFeed.s.sol --rpc-url $RPC_URL --account $WALLET_ALIAS --broadcast $VERIFY -vvv 2>&1)
-echo "$PRICE_FEED_OUTPUT" > "$DEPLOYMENT_LOG"
+# Deploy the price feed contract
+echo "Deploying PasifikaPriceFeed..."
+forge script script/DeployPasifikaPriceFeed.s.sol --rpc-url $RPC_URL --account $WALLET_ALIAS --broadcast $VERIFY -vvv | tee "$DEPLOYMENT_LOG"
 
-# Extract price feed address from the output
-PRICE_FEED_ADDRESS=$(echo "$PRICE_FEED_OUTPUT" | grep -oP "PasifikaPriceFeed deployed at: \K0x[a-fA-F0-9]{40}")
+# Capture the deployed address from the deployment log
+PRICE_FEED_ADDRESS=$(grep -oP "PasifikaPriceFeed deployed at: \K0x[a-fA-F0-9]{40}" "$DEPLOYMENT_LOG" | tail -1)
+
 if [ -z "$PRICE_FEED_ADDRESS" ]; then
     echo "Failed to extract PasifikaPriceFeed address. Check the deployment log at $DEPLOYMENT_LOG"
     exit 1
 fi
 echo "PasifikaPriceFeed deployed at: $PRICE_FEED_ADDRESS"
 
-# Now deploy the Exchange contract
+# Deploy the exchange contract
 echo "Deploying PasifikaExchange..."
 export PRICE_FEED_ADDRESS
 export DEPLOY_PRICE_FEED=false
-EXCHANGE_OUTPUT=$(forge script script/DeployPasifikaExchange.s.sol --rpc-url $RPC_URL --account $WALLET_ALIAS --broadcast $VERIFY -vvv 2>&1)
-echo "$EXCHANGE_OUTPUT" >> "$DEPLOYMENT_LOG"
+forge script script/DeployPasifikaExchange.s.sol --rpc-url $RPC_URL --account $WALLET_ALIAS --broadcast $VERIFY -vvv | tee -a "$DEPLOYMENT_LOG"
 
-# Extract exchange address from the output
-EXCHANGE_ADDRESS=$(echo "$EXCHANGE_OUTPUT" | grep -oP "PasifikaExchange deployed at: \K0x[a-fA-F0-9]{40}")
+# Capture the deployed address from the deployment log
+EXCHANGE_ADDRESS=$(grep -oP "PasifikaExchange deployed at: \K0x[a-fA-F0-9]{40}" "$DEPLOYMENT_LOG" | tail -1)
+
 if [ -z "$EXCHANGE_ADDRESS" ]; then
     echo "Failed to extract PasifikaExchange address. Check the deployment log at $DEPLOYMENT_LOG"
     exit 1
 fi
 echo "PasifikaExchange deployed at: $EXCHANGE_ADDRESS"
+
+# Deploy the payment gateway
+echo "Deploying PasifikaPaymentGateway..."
+forge script script/DeployPasifikaPaymentGateway.s.sol --rpc-url $RPC_URL --account $WALLET_ALIAS --broadcast $VERIFY -vvv | tee -a "$DEPLOYMENT_LOG"
+
+# Capture the deployed address from the deployment log
+PAYMENT_GATEWAY_ADDRESS=$(grep -oP "PasifikaPaymentGateway deployed at: \K0x[a-fA-F0-9]{40}" "$DEPLOYMENT_LOG" | tail -1)
+
+if [ -z "$PAYMENT_GATEWAY_ADDRESS" ]; then
+    echo "Failed to extract PasifikaPaymentGateway address. Check the deployment log at $DEPLOYMENT_LOG"
+    exit 1
+fi
+echo "PasifikaPaymentGateway deployed at: $PAYMENT_GATEWAY_ADDRESS"
+
+# Set environment variable for the payment gateway
+export PAYMENT_GATEWAY_ADDRESS=$PAYMENT_GATEWAY_ADDRESS
+export DEPLOY_PAYMENT_GATEWAY=false
+
+# Now deploy the Fiat Bridge contract
+echo "Deploying PasifikaFiatBridge..."
+forge script script/DeployPasifikaFiatBridge.s.sol --rpc-url $RPC_URL --account $WALLET_ALIAS --broadcast $VERIFY -vvv | tee -a "$DEPLOYMENT_LOG"
+
+# Capture the deployed address from the deployment log
+FIAT_BRIDGE_ADDRESS=$(grep -oP "PasifikaFiatBridge deployed at: \K0x[a-fA-F0-9]{40}" "$DEPLOYMENT_LOG" | tail -1)
+
+if [ -z "$FIAT_BRIDGE_ADDRESS" ]; then
+    echo "Failed to extract PasifikaFiatBridge address. Check the deployment log at $DEPLOYMENT_LOG"
+    exit 1
+fi
+echo "PasifikaFiatBridge deployed at: $FIAT_BRIDGE_ADDRESS"
 
 # Create JSON files for the frontend
 echo "Creating contract files for the frontend..."
@@ -121,15 +159,43 @@ cat > "$DEPLOYED_CONTRACTS_DIR/PasifikaExchange.json" << EOL
 }
 EOL
 
+# Create PasifikaPaymentGateway JSON
+cat > "$DEPLOYED_CONTRACTS_DIR/PasifikaPaymentGateway.json" << EOL
+{
+  "name": "PasifikaPaymentGateway",
+  "address": "$PAYMENT_GATEWAY_ADDRESS",
+  "network": "$NETWORK",
+  "explorer": "${EXPLORER_URL}${PAYMENT_GATEWAY_ADDRESS}",
+  "deployed": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "description": "Payment processing gateway for the Pasifika Exchange on Arbitrum"
+}
+EOL
+
+# Create PasifikaFiatBridge JSON
+cat > "$DEPLOYED_CONTRACTS_DIR/PasifikaFiatBridge.json" << EOL
+{
+  "name": "PasifikaFiatBridge",
+  "address": "$FIAT_BRIDGE_ADDRESS",
+  "network": "$NETWORK",
+  "explorer": "${EXPLORER_URL}${FIAT_BRIDGE_ADDRESS}",
+  "deployed": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "description": "Fiat-to-crypto bridge with multi-processor support (Circle & Stripe) for the Pasifika Exchange"
+}
+EOL
+
 # Copy ABIs to the frontend
 echo "Copying ABIs to frontend..."
 cp out/PasifikaPriceFeed.sol/PasifikaPriceFeed.json "$DEPLOYED_CONTRACTS_DIR/PasifikaPriceFeed_ABI.json"
 cp out/PasifikaExchange.sol/PasifikaExchange.json "$DEPLOYED_CONTRACTS_DIR/PasifikaExchange_ABI.json"
+cp out/PasifikaPaymentGateway.sol/PasifikaPaymentGateway.json "$DEPLOYED_CONTRACTS_DIR/PasifikaPaymentGateway_ABI.json"
+cp out/PasifikaFiatBridge.sol/PasifikaFiatBridge.json "$DEPLOYED_CONTRACTS_DIR/PasifikaFiatBridge_ABI.json"
 
 echo "============================================="
 echo "Deployment completed successfully!"
 echo "PasifikaPriceFeed deployed at: $PRICE_FEED_ADDRESS"
 echo "PasifikaExchange deployed at: $EXCHANGE_ADDRESS"
+echo "PasifikaPaymentGateway deployed at: $PAYMENT_GATEWAY_ADDRESS"
+echo "PasifikaFiatBridge deployed at: $FIAT_BRIDGE_ADDRESS"
 echo "Contract files have been copied to: $DEPLOYED_CONTRACTS_DIR"
 echo "Deployment log saved at: $DEPLOYMENT_LOG"
 echo "============================================="
