@@ -225,7 +225,7 @@ contract PasifikaFiatBridgeTest is Test {
     function test_RevertWhen_PaymentVerificationFails() public {
         // This test verifies that attempting to verify a Circle payment reverts
         // due to missing transferAndCall implementation in the mock LINK token
-        
+
         // Record a pending payment
         vm.prank(deployer);
         uint256 pendingId = fiatBridge.recordPendingFiatPayment(
@@ -240,11 +240,13 @@ contract PasifikaFiatBridgeTest is Test {
         // Try to verify the payment - expect it to revert due to missing transferAndCall implementation
         // in our mock LINK token
         vm.prank(deployer);
-        vm.expectRevert(); 
+        vm.expectRevert();
         fiatBridge.verifyCirclePayment(pendingId);
-        
+
         // Verify funds don't get transferred (this is what we want to check in a payment failure)
-        assertEq(usdcToken.balanceOf(recipient), 0, "Recipient should not receive funds when payment verification reverts");
+        assertEq(
+            usdcToken.balanceOf(recipient), 0, "Recipient should not receive funds when payment verification reverts"
+        );
         assertEq(usdcToken.balanceOf(treasury), 0, "Treasury should not receive fees when payment verification reverts");
     }
 
